@@ -1,15 +1,16 @@
-from psycopg2.pool import SimpleConnectionPool
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 from app.core.config import DATABASE_URL
 
-pool =  SimpleConnectionPool(1, 10, DATABASE_URL)
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def get_db():
-  connect = pool.getconn()
-  try:
-    yield connect
-    connect.commit()
-  except Exception:
-    connect.rollback()
-    raise
-  finally:
-    pool.putconn(connect)
+    db = SessionLocal()
+    try:
+        yield db
+    except Exception:
+        db.rollback()
+        raise
+    finally:
+        db.close()
